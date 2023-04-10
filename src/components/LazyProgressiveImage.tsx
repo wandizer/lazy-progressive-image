@@ -1,49 +1,56 @@
-import React, { useEffect, useRef, useState } from "react";
-import { CSSProperties } from "react";
-import { useImageOnLoad, useIntersectionObserver } from "usehooks-ts";
+import { CSSProperties, useRef } from "react";
+import { useIntersectionObserver } from "usehooks-ts";
+import useImageOnLoadEnhanced from "../hooks/useImageOnLoadEnhanced";
 
 export type Ratio = "16/9" | "4/3" | "1/1" | "3/2";
 
 type LazyImageProps = {
-  filename: string;
-  width?: CSSProperties;
-  height?: CSSProperties;
+  imageSrc: string;
+  placeholderSrc?: string;
+  title?: string;
+  // Wrapper
+  width?: number | string;
+  height?: number | string;
   ratio?: Ratio;
-  maxWidth?: CSSProperties;
+  maxWidth?: number | string;
+  wrapperStyle?: CSSProperties;
+  // Features
+  features?: {
+    placeholderBlur?: boolean;
+    diminishOnHidden?: boolean;
+  };
 };
 
-export default function LazyProgressiveImage({ filename, ratio, maxWidth, width, height }: LazyImageProps) {
-  const { handleImageOnLoad, css } = useImageOnLoad();
+export default function LazyProgressiveImage({
+  imageSrc,
+  placeholderSrc,
+  title,
+  ratio,
+  maxWidth,
+  width,
+  height,
+  wrapperStyle,
+  features = {},
+}: LazyImageProps) {
+  const { placeholderBlur = false, diminishOnHidden = true } = features;
+  const hasPlaceholderLogic = !!placeholderSrc;
+
+  // Intersection observer to determine if the image is in the screen
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const entry = useIntersectionObserver(wrapperRef, {
-    freezeOnceVisible: false,
-  });
+  const entry = useIntersectionObserver(wrapperRef, { freezeOnceVisible: false });
   const isVisible = !!entry?.isIntersecting;
-  const [isHalfLoaded, setIsHalfLoaded] = useState(false);
-  const [isFullyLoaded, setIsFullyLoaded] = useState(false);
 
-  useEffect(() => {
-    if (isVisible) console.log(`🚀 ~ Render section ${filename}`, { isVisible });
-  }, [isVisible]);
+  // Thumnail & full size image (or just full size image on the thumbnail place if no placeholder)
+  const { isThumbnailLoaded, isFullSizeLoaded, handleThumbnailOnLoad, handleFullSizeOnLoad, css } =
+    useImageOnLoadEnhanced({ blur: placeholderBlur });
 
-  const handleThumbnailImageOnLoad = () => {
-    console.log("🚀 ~ handleThumbnailImageOnLoad");
-    setIsHalfLoaded(true);
-  };
-
-  const handleFullSizeImageOnLoad = () => {
-    console.log("🚀 ~ handleFullSizeImageOnLoad");
-    handleImageOnLoad();
-    setIsFullyLoaded(true);
-  };
-
-  const style = {
-    wrap: {
+  const style: { [key: string]: CSSProperties } = {
+    wrapper: {
       position: "relative",
       margin: "auto",
       width: width || 200,
       height: height || 300,
-      border: "1px solid #ccc",
+      ...wrapperStyle,
     },
     image: {
       position: "absolute",
@@ -53,38 +60,42 @@ export default function LazyProgressiveImage({ filename, ratio, maxWidth, width,
       right: 0,
       width: "100%",
       height: "100%",
+      objectFit: "cover",
     },
   };
 
+  const diminishEffectOnHidden = {
+    // replace full size image with thumbnail when not visible effect
+    opacity: isVisible && isFullSizeLoaded ? 1 : "0",
+  };
+
   return (
-    <div style={style.wrap} ref={wrapperRef}>
-      {(isVisible || isHalfLoaded) && (
+    <div style={style.wrapper} ref={wrapperRef}>
+      {(isVisible || isThumbnailLoaded) && (
         <>
+          {/* Thumbnail image or full size image if placeholder not provided */}
           <img
-            onLoad={handleThumbnailImageOnLoad}
+            onLoad={handleThumbnailOnLoad}
             style={{
               ...style.image,
               ...css.thumbnail,
-              // visibility: isHalfLoaded ? "visible" : "inherit",
-              filter: "none", // Remove default blur filter
-              opacity: isHalfLoaded ? "1" : "0", // hide thumbnail until it's loaded
-              transition: "opacity 0.5s ease-in 0s",
+              visibility: !isVisible && isThumbnailLoaded ? "visible" : "inherit",
             }}
-            src={`/superlight/${filename}`}
-            alt='thumbnail'
+            src={placeholderSrc || imageSrc} // If no placeholder, thumbnail becomes the full size image
+            alt={title || "thumnailImage"}
             loading='lazy'
           />
-          {isHalfLoaded && (
+          {/* Full size image in placeholder logic, none otherwise */}
+          {isThumbnailLoaded && hasPlaceholderLogic && (
             <img
-              onLoad={handleFullSizeImageOnLoad}
+              onLoad={handleFullSizeOnLoad}
               style={{
                 ...style.image,
                 ...css.fullSize,
-                opacity: isVisible && isFullyLoaded ? 1 : "0", // hide full image until it's visible
-                transition: "opacity 0.5s ease-in 0s",
+                ...(diminishOnHidden ? diminishEffectOnHidden : {}),
               }}
-              src={`/heavy/${filename}`}
-              alt='fullSize'
+              src={imageSrc}
+              alt={title || "fullSizeImage"}
               loading='lazy'
             />
           )}

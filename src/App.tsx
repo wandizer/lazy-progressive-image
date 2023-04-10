@@ -1,27 +1,27 @@
-import { CSSProperties, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useState } from "react";
 import "./App.css";
-import { ProgressiveImage } from "./components/ProgressiveImage";
 import LazyProgressiveImage from "./components/LazyProgressiveImage";
 
-function App() {
-  const [count, setCount] = useState(0);
+function generateArray(length: number) {
+  return Array.from({ length }, (_, i) => i);
+}
 
+function App() {
   return (
     <div className='App'>
       <div className='container'>
-        {["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"].map((item) => (
-          // <div className='card' key={item}>
-          //   <ProgressiveImage name={item} />
-          // </div>
-          <LazyProgressiveImage
-            key={item}
-            filename={`${item}.jpeg`}
-            width={400 as React.CSSProperties}
-            height={600 as React.CSSProperties}
-          />
-        ))}
+        {[...Array(15).keys()].map((item) => {
+          let index = item + 1;
+          return (
+            <LazyProgressiveImage
+              key={index}
+              imageSrc={`/heavy/${index}.jpeg`}
+              placeholderSrc={`/superlight/${index}.jpeg`}
+              width={400}
+              height={600}
+            />
+          );
+        })}
       </div>
     </div>
   );
