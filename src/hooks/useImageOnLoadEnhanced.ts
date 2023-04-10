@@ -29,7 +29,7 @@ type PropsType = {
  * @param options.fullSizeCSS - The extra CSS style of the full size image
  */
 function useImageOnLoadEnhanced(options?: PropsType): EnhancedImageOnLoadType {
-  const { blur = false, blurRadius = 10, thumbnailCSS, fullSizeCSS } = options || {};
+  const { blur = false, blurRadius = 4, thumbnailCSS, fullSizeCSS } = options || {};
   const [isThumbnailLoaded, setIsThumbnailLoaded] = useState(false);
   const [isFullSizeLoaded, setIsFullSizeLoaded] = useState(false);
 

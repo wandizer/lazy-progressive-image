@@ -2,7 +2,7 @@ import { CSSProperties, useRef } from "react";
 import { useIntersectionObserver } from "usehooks-ts";
 import useImageOnLoadEnhanced from "../hooks/useImageOnLoadEnhanced";
 
-export type Ratio = "16/9" | "4/3" | "1/1" | "3/2";
+export type Ratio = `${number}/${number}`; // e.g. 1/1, 16/9, 3/4, 4/3, 9/16
 
 type LazyImageProps = {
   imageSrc: string;
@@ -12,10 +12,10 @@ type LazyImageProps = {
   width?: number | string;
   height?: number | string;
   ratio?: Ratio;
-  maxWidth?: number | string;
   wrapperStyle?: CSSProperties;
   // Features
   features?: {
+    disableDefaultCSS?: boolean;
     placeholderBlur?: boolean;
     diminishOnHidden?: boolean;
   };
@@ -26,13 +26,12 @@ export default function LazyProgressiveImage({
   placeholderSrc,
   title,
   ratio,
-  maxWidth,
   width,
   height,
   wrapperStyle,
   features = {},
 }: LazyImageProps) {
-  const { placeholderBlur = false, diminishOnHidden = true } = features;
+  const { disableDefaultCSS = false, placeholderBlur = false, diminishOnHidden = true } = features;
   const hasPlaceholderLogic = !!placeholderSrc;
 
   // Intersection observer to determine if the image is in the screen
@@ -45,23 +44,28 @@ export default function LazyProgressiveImage({
     useImageOnLoadEnhanced({ blur: placeholderBlur });
 
   const style: { [key: string]: CSSProperties } = {
-    wrapper: {
-      position: "relative",
-      margin: "auto",
-      width: width || 200,
-      height: height || 300,
-      ...wrapperStyle,
-    },
-    image: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      bottom: 0,
-      right: 0,
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    },
+    wrapper: !disableDefaultCSS
+      ? {
+          position: "relative",
+          width: width || "100%",
+          height: !ratio ? height : "auto",
+          aspectRatio: ratio ?? undefined,
+          overflow: "hidden",
+          ...wrapperStyle,
+        }
+      : {},
+    image: !disableDefaultCSS
+      ? {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }
+      : {},
   };
 
   const diminishEffectOnHidden = {
@@ -70,7 +74,7 @@ export default function LazyProgressiveImage({
   };
 
   return (
-    <div style={style.wrapper} ref={wrapperRef}>
+    <div className='wrapper' style={style.wrapper} ref={wrapperRef}>
       {(isVisible || isThumbnailLoaded) && (
         <>
           {/* Thumbnail image or full size image if placeholder not provided */}

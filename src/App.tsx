@@ -2,23 +2,31 @@ import { useState } from "react";
 import "./App.css";
 import LazyProgressiveImage from "./components/LazyProgressiveImage";
 
-function generateArray(length: number) {
-  return Array.from({ length }, (_, i) => i);
-}
-
 function App() {
+  // DEMO
   return (
     <div className='App'>
       <div className='container'>
-        {[...Array(15).keys()].map((item) => {
+        {[...Array(7).keys()].map((item) => {
           let index = item + 1;
+          const usingHeightAndWidthProps = {
+            height: 720,
+            width: 1280,
+          };
+          const usingRatioProps = {
+            ratio: "16/9" as `${number}/${number}`,
+          };
           return (
             <LazyProgressiveImage
               key={index}
-              imageSrc={`/heavy/${index}.jpeg`}
-              placeholderSrc={`/superlight/${index}.jpeg`}
-              width={400}
-              height={600}
+              imageSrc={`/images/heavy/compressed/landscape${index}.png`}
+              placeholderSrc={`/images/light/compressed/landscape${index}.png`}
+              // {...usingHeightAndWidthProps} // Option 1: using height and width
+              {...usingRatioProps} // Option 2: using ratio
+              features={{
+                placeholderBlur: false, // default is false
+                diminishOnHidden: true, // default is true
+              }}
             />
           );
         })}

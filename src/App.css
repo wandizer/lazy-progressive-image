@@ -1,7 +1,6 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  text-align: center;
+  width: 100%;
+  height: 100%;
 }
 
 .container {
@@ -9,35 +8,14 @@
   flex-flow: row wrap;
   justify-content: space-around;
   width: 100%;
+  max-width: 1280px;
   height: auto;
+  margin: 0 auto;
+  text-align: center;
 }
 
-.card {
-  position: relative;
-  aspect-ratio: 3/4;
-  width: calc(1200px / 3);
-  margin: 10px;
-  padding: 0;
-  border: 1px solid #ccc;
+.wrapper {
+  // display: block;
   border-radius: 8px;
-  overflow: hidden;
+  margin: 10px;
 }
-
-// picture {
-//   position: absolute;
-//   top: 0;
-//   bottom: 0;
-//   left: 0;
-//   right: 0;
-// }
-
-picture.loading {
-  opacity: 0;
-  transition: all 0.5s ease-in-out;
-}
-
-// img {
-//   height: 100%;
-//   width: 100%;
-//   object-fit: cover;
-// }
