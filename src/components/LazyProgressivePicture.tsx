@@ -4,9 +4,17 @@ import useImageOnLoadEnhanced from "../hooks/useImageOnLoadEnhanced";
 
 export type Ratio = `${number}/${number}`; // e.g. 1/1, 16/9, 3/4, 4/3, 9/16
 
-type LazyProgressiveImageProps = {
+export type PictureSource = {
+  srcSet: string;
+  media?: string;
+  type?: string;
+};
+
+type LazyProgressivePictureProps = {
   imageSrc: string;
   placeholderSrc?: string;
+  sources: PictureSource[];
+  placeholderSources?: PictureSource[];
   title?: string;
   // Wrapper
   width?: number | string;
@@ -21,18 +29,20 @@ type LazyProgressiveImageProps = {
   };
 };
 
-export default function LazyProgressiveImage({
+export default function LazyProgressivePicture({
   imageSrc,
+  sources,
   placeholderSrc,
+  placeholderSources,
   title,
   ratio,
   width,
   height,
   wrapperStyle,
   features = {},
-}: LazyProgressiveImageProps) {
+}: LazyProgressivePictureProps) {
   const { disableDefaultCSS = false, placeholderBlur = false, diminishOnHidden = true } = features;
-  const hasPlaceholderLogic = !!placeholderSrc;
+  const hasPlaceholderLogic = !!placeholderSrc && !!placeholderSources && placeholderSources.length > 0;
 
   // Intersection observer to determine if the image is in the screen
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -47,10 +57,10 @@ export default function LazyProgressiveImage({
     wrapper: !disableDefaultCSS
       ? {
           position: "relative",
+          overflow: "hidden",
           width: width || "100%",
           ...(!ratio && height && { height }),
           ...(ratio && { aspectRatio: ratio }),
-          overflow: "hidden",
           ...wrapperStyle,
         }
       : {},
@@ -78,30 +88,40 @@ export default function LazyProgressiveImage({
       {(isVisible || isThumbnailLoaded) && (
         <>
           {/* Thumbnail image or full size image if placeholder not provided */}
-          <img
-            onLoad={handleThumbnailOnLoad}
-            style={{
-              ...style.image,
-              ...css.thumbnail,
-              visibility: !isVisible && isThumbnailLoaded ? "visible" : "inherit",
-            }}
-            src={placeholderSrc || imageSrc} // If no placeholder, thumbnail becomes the full size image
-            alt={title || "thumnailImage"}
-            loading='lazy'
-          />
-          {/* Full size image in placeholder logic, none otherwise */}
-          {isThumbnailLoaded && hasPlaceholderLogic && (
+          <picture>
+            {(placeholderSources || sources).map((source, index) => (
+              <source key={index} {...source} />
+            ))}
             <img
-              onLoad={handleFullSizeOnLoad}
+              onLoad={handleThumbnailOnLoad}
               style={{
                 ...style.image,
-                ...css.fullSize,
-                ...(diminishOnHidden ? diminishEffectOnHidden : {}),
+                ...css.thumbnail,
+                visibility: !isVisible && isThumbnailLoaded ? "visible" : "inherit",
               }}
-              src={imageSrc}
-              alt={title || "fullSizeImage"}
+              src={placeholderSrc || imageSrc} // If no placeholder, thumbnail becomes the full size image (fallback src)
+              alt={title || "thumnailImage"}
               loading='lazy'
             />
+          </picture>
+          {/* Full size image in placeholder logic, none otherwise */}
+          {isThumbnailLoaded && hasPlaceholderLogic && (
+            <picture>
+              {sources.map((source, index) => (
+                <source key={index} {...source} />
+              ))}
+              <img
+                onLoad={handleFullSizeOnLoad}
+                style={{
+                  ...style.image,
+                  ...css.fullSize,
+                  ...(diminishOnHidden ? diminishEffectOnHidden : {}),
+                }}
+                src={imageSrc}
+                alt={title || "fullSizeImage"}
+                loading='lazy'
+              />
+            </picture>
           )}
         </>
       )}
