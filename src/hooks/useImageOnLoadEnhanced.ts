@@ -18,6 +18,7 @@ type PropsType = {
   blurRadius?: number;
   thumbnailCSS?: CSSProperties;
   fullSizeCSS?: CSSProperties;
+  transitionDuration?: number; // 500 (ms)
 };
 
 /**
@@ -27,9 +28,16 @@ type PropsType = {
  * @param options.blurRadius - The radius of the blur effect
  * @param options.thumbnailCSS - The extra CSS style of the thumbnail image
  * @param options.fullSizeCSS - The extra CSS style of the full size image
+ * @param options.transitionDuration - The duration of the transitions
+ * @returns {Object} The object of the hook:
+ *    - isThumbnailLoaded - The state of the thumbnail image loading
+ *    - isFullSizeLoaded - The state of the full size image loading
+ *    - handleThumbnailOnLoad - The function to handle the thumbnail image loading
+ *    - handleFullSizeOnLoad - The function to handle the full size image loading
+ *    - css - The CSS style of the thumbnail and full size image
  */
 function useImageOnLoadEnhanced(options?: PropsType): EnhancedImageOnLoadType {
-  const { blur = false, blurRadius = 4, thumbnailCSS, fullSizeCSS } = options || {};
+  const { blur = false, blurRadius = 4, thumbnailCSS, fullSizeCSS, transitionDuration = 500 } = options || {};
   const [isThumbnailLoaded, setIsThumbnailLoaded] = useState(false);
   const [isFullSizeLoaded, setIsFullSizeLoaded] = useState(false);
 
@@ -41,14 +49,14 @@ function useImageOnLoadEnhanced(options?: PropsType): EnhancedImageOnLoadType {
     thumbnail: {
       visibility: isFullSizeLoaded ? "visible" : "hidden",
       opacity: isThumbnailLoaded ? "1" : "0",
-      transition: "opacity 0.5s ease-in-out, visibility 0s ease-out 0.5s",
+      transition: `opacity ${transitionDuration}ms ease-in-out, visibility 0ms ease-out ${transitionDuration}ms`,
       filter: blur ? `blur(${blurRadius}px)` : "none",
       ...thumbnailCSS,
     },
     // Full size image style
     fullSize: {
       opacity: isFullSizeLoaded ? 1 : "0",
-      transition: "opacity 0.5s ease-in 0s",
+      transition: `opacity ${transitionDuration}ms ease-in 0ms`,
       ...fullSizeCSS,
     },
   };

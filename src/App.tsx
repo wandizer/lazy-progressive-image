@@ -7,6 +7,9 @@ function App() {
   const [showImage, setShowImage] = useState(false);
   const [showPicture, setShowPicture] = useState(true);
 
+  const usingHeightAndWidthProps = { height: 720, width: 1280 };
+  const usingRatioProps = { ratio: "16/9" as Ratio };
+
   // DEMO
   return (
     <div className='App'>
@@ -24,13 +27,6 @@ function App() {
         {showImage &&
           [...Array(7).keys()].map((item) => {
             let index = item + 1;
-            const usingHeightAndWidthProps = {
-              height: 720,
-              width: 1280,
-            };
-            const usingRatioProps = {
-              ratio: "16/9" as Ratio,
-            };
             return (
               <LazyProgressiveImage
                 key={index}
@@ -40,7 +36,7 @@ function App() {
                 {...usingRatioProps} // Option 2: using ratio
                 features={{
                   placeholderBlur: false, // default is false
-                  diminishOnHidden: true, // default is true
+                  diminishOnHidden: false, // default is false
                 }}
               />
             );
@@ -49,13 +45,6 @@ function App() {
         {showPicture &&
           [...Array(7).keys()].map((item) => {
             let index = item + 1;
-            const usingHeightAndWidthProps = {
-              height: 720,
-              width: 1280,
-            };
-            const usingRatioProps = {
-              ratio: "16/9" as Ratio,
-            };
             return (
               <LazyProgressivePicture
                 key={index}
@@ -85,11 +74,13 @@ function App() {
                     media: "(min-width: 769px)",
                   },
                 ]}
-                // {...usingHeightAndWidthProps} // Option 1: using height and width
-                // {...usingRatioProps} // Option 2: using ratio <-- Disabled inorder to manually change ration using CSS
+                // Option 1: using height and width
+                // {...usingHeightAndWidthProps}
+                // Option 2: using ratio <-- Disabled in order to manually change ration using CSS
+                // {...usingRatioProps}
                 features={{
                   placeholderBlur: false, // default is false
-                  diminishOnHidden: true, // default is true
+                  diminishOnHidden: false, // default is false
                 }}
               />
             );
