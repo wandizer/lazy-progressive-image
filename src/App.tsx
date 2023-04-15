@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "./App.css";
 import LazyProgressiveImage, { Ratio } from "./components/LazyProgressiveImage";
-import LazyProgressivePicture from "./components/LazyProgressivePicture";
 
 function App() {
   const [showImage, setShowImage] = useState(false);
@@ -13,6 +12,7 @@ function App() {
   // DEMO
   return (
     <div className='App'>
+      {/* Header */}
       <div className='header'>
         <button className='button' onClick={() => setShowImage(!showImage)}>
           <span className={`circle ${showImage ? "active" : "inactive"}`}></span>
@@ -23,6 +23,8 @@ function App() {
           Toggle Picture
         </button>
       </div>
+
+      {/* Container */}
       <div className='container'>
         {showImage &&
           [...Array(7).keys()].map((item) => {
@@ -46,7 +48,7 @@ function App() {
           [...Array(7).keys()].map((item) => {
             let index = item + 1;
             return (
-              <LazyProgressivePicture
+              <LazyProgressiveImage
                 key={index}
                 imageSrc={`/images/heavy/compressed/landscape${index}.png`} // Fallback src for img
                 placeholderSrc={`/images/light/compressed/landscape${index}.png`} // Fallback src for img

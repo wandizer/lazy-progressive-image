@@ -1,4 +1,4 @@
-import { CSSProperties, useRef, useState } from "react";
+import { CSSProperties, useCallback, useRef, useState } from "react";
 import { useIntersectionObserver, useTimeout } from "usehooks-ts";
 import useImageOnLoadEnhanced from "../hooks/useImageOnLoadEnhanced";
 
@@ -6,9 +6,17 @@ const SAFE_DELAY = 100; // in ms
 
 export type Ratio = `${number}/${number}`; // e.g. 1/1, 16/9, 3/4, 4/3, 9/16
 
-type LazyProgressiveImageProps = {
+export type PictureSource = {
+  srcSet: string;
+  media?: string;
+  type?: string;
+};
+
+type LazyProgressivePictureProps = {
   imageSrc: string;
   placeholderSrc?: string;
+  sources?: PictureSource[];
+  placeholderSources?: PictureSource[];
   title?: string;
   // Wrapper
   width?: number | string;
@@ -26,21 +34,23 @@ type LazyProgressiveImageProps = {
 
 export default function LazyProgressiveImage({
   imageSrc,
+  sources,
   placeholderSrc,
+  placeholderSources,
   title,
   ratio,
   width,
   height,
   wrapperStyle,
   features = {},
-}: LazyProgressiveImageProps) {
+}: LazyProgressivePictureProps) {
   const {
     disableDefaultCSS = false,
     placeholderBlur = false,
     diminishOnHidden = false,
     transitionDuration = 500, // in ms
   } = features;
-  const hasPlaceholderLogic = !!placeholderSrc;
+  const hasPlaceholderLogic = !!placeholderSrc; // && !!placeholderSources && placeholderSources.length > 0;
 
   // Intersection observer to determine if the image is in the screen
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -94,38 +104,57 @@ export default function LazyProgressiveImage({
     opacity: isVisible && isFullSizeLoaded ? 1 : "0",
   };
 
+  const renderImage = useCallback((imgComponent: JSX.Element, pictureSources?: PictureSource[]): JSX.Element => {
+    if (pictureSources && pictureSources.length > 0) {
+      return (
+        <picture>
+          {pictureSources?.map((source, index) => (
+            <source key={index} {...source} />
+          ))}
+          {imgComponent}
+        </picture>
+      );
+    }
+    return imgComponent;
+  }, []);
+
   return (
     <div className='wrapper' style={style.wrapper} ref={wrapperRef}>
       {(isVisible || isThumbnailLoaded) && (
         <>
           {/* Thumbnail image or full size image if placeholder not provided */}
-          {!hidePlaceholderWithTimeout && ( // is safely removed from DOM after full image loaded and after transition duration
-            <img
-              onLoad={handleThumbnailOnLoad}
-              style={{
-                ...style.image,
-                ...css.thumbnail,
-                visibility: !isVisible && isThumbnailLoaded ? "visible" : "inherit",
-              }}
-              src={placeholderSrc || imageSrc} // If no placeholder, thumbnail becomes the full size image
-              alt={title || "thumnailImage"}
-              loading='lazy'
-            />
-          )}
+          {!hidePlaceholderWithTimeout && // is safely removed from DOM after full image loaded and after transition duration
+            renderImage(
+              <img
+                onLoad={handleThumbnailOnLoad}
+                style={{
+                  ...style.image,
+                  ...css.thumbnail,
+                  visibility: !isVisible && isThumbnailLoaded ? "visible" : "inherit",
+                }}
+                src={placeholderSrc || imageSrc} // If no placeholder, thumbnail becomes the full size image (fallback src)
+                alt={title || "thumnailImage"}
+                loading='lazy'
+              />,
+              placeholderSources || sources
+            )}
           {/* Full size image in placeholder logic, none otherwise */}
-          {isThumbnailLoaded && hasPlaceholderLogic && (
-            <img
-              onLoad={handleFullSizeOnLoad}
-              style={{
-                ...style.image,
-                ...css.fullSize,
-                ...(diminishOnHidden ? diminishEffectOnHidden : {}),
-              }}
-              src={imageSrc}
-              alt={title || "fullSizeImage"}
-              loading='lazy'
-            />
-          )}
+          {isThumbnailLoaded &&
+            hasPlaceholderLogic && // if no placeholder, full size image is already rendered in the thumbnail place
+            renderImage(
+              <img
+                onLoad={handleFullSizeOnLoad}
+                style={{
+                  ...style.image,
+                  ...css.fullSize,
+                  ...(diminishOnHidden ? diminishEffectOnHidden : {}),
+                }}
+                src={imageSrc}
+                alt={title || "fullSizeImage"}
+                loading='lazy'
+              />,
+              sources
+            )}
         </>
       )}
     </div>
