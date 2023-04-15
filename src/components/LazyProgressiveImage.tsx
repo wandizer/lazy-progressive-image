@@ -32,6 +32,28 @@ type LazyProgressivePictureProps = {
   };
 };
 
+/**
+ * Lazy progressive image component with placeholder. It uses IntersectionObserver to determine
+ * if the image is in the screen, and charges the placeholder image first, then the full size image.
+ * Behind the scenes, it uses `useImageOnLoadEnhanced` custom hook, which is an adapted version of
+ * `useImageOnLoad` hook from `usehooks-ts` library. It also uses `useTimeout` and `useIntersectionObserver`
+ * hook from `usehooks-ts`.
+ * @param imageSrc - Fallback src for img
+ * @param placeholderSrc - Fallback src for img
+ * @param sources - Picture sources
+ * @param placeholderSources - Picture sources
+ * @param title - Image title (alt)
+ * @param width - Image width
+ * @param height - Image height
+ * @param ratio - Image ratio
+ * @param wrapperStyle - Wrapper style
+ * @param features - Features
+ * @param features.disableDefaultCSS - Disable default CSS (default is false)
+ * @param features.placeholderBlur - Blur placeholder image (default is false)
+ * @param features.diminishOnHidden - Diminish full size image when not visible (default is false)
+ * @param features.transitionDuration - Transition duration in ms (default is 500 [ms])
+ * @returns Lazy progressive image component
+ */
 export default function LazyProgressiveImage({
   imageSrc,
   sources,
